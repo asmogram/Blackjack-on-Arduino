@@ -1,0 +1,266 @@
+#include <Wire.h>
+#include "rgb_lcd.h"
+
+rgb_lcd lcd;
+
+int colorR = 0;
+int colorG = 255;
+int colorB = 255;
+
+const int trigPin = 13;
+const int echoPin = 12;
+
+
+#define LED_1 11
+#define LED_2 10
+#define LED_3 9
+#define LED_4 8
+#define BUZZER_PIN 7
+#define Buthit_Pin 6
+
+
+int min = 1;
+int max = 11;
+int card = (rand() % (max - min + 1)) + min;
+int P_score = 0;
+int D_score = 0;
+
+   void setup()
+{
+    lcd.begin(16, 2);
+    
+    lcd.setRGB(colorR, colorG, colorB);
+    
+   
+     
+   lcd.print("Blackjack");
+   pinMode(trigPin, OUTPUT);  
+   pinMode(echoPin, INPUT);
+    
+    pinMode(Buthit_Pin,  INPUT_PULLUP); 
+    
+    pinMode(11, OUTPUT);
+    pinMode(10, OUTPUT);
+    pinMode(9, OUTPUT);
+    pinMode(8, OUTPUT);
+    pinMode(BUZZER_PIN,OUTPUT);
+    delay(5000);
+    lcd.clear();
+    
+  Serial.begin(9600);  
+
+}
+
+  bool buttonhitstate()
+  {
+      return false;    
+  }
+    
+  void ask()
+  {
+    lcd.setRGB(0, 255, 255);
+    delay(1500);
+    lcd.clear();
+    lcd.print("Hit or Stand?");
+    
+    while(!buttonhitstate())
+    {
+      if(digitalRead(Butstand_Pin) == LOW)
+      {
+        hit();
+      }
+      if(distanceCheck() == true)
+      {
+        stand();
+      }
+    }
+  }
+  
+  bool distanceCheck()
+{
+  float distance = 12;
+  float duration = 0;
+  
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(20);
+    digitalWrite(trigPin, LOW);
+
+    duration = pulseIn(echoPin, HIGH);
+    distance = (duration/29)/2; //formula speed*time = distance
+    Serial.print("Distance: ");
+    Serial.println(distance);
+    delay(100);
+    if(distance < 5)
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  
+}
+
+void loop()
+{
+  ask();
+}
+
+
+void hit()
+{
+  
+  int card = random(1,12); 
+  P_score += card;
+  if(P_score > 21)
+  {
+   lose();
+  }
+  lcd.clear();
+  lcd.print(P_score);
+  dealersturn();
+  loop();
+} 
+
+void dealersturn()
+{
+  if(D_score < 17)
+  {
+    int card = random(min,max+1);
+    D_score += card;
+  }
+  if(D_score > 21)
+  {
+    win();
+  }
+}
+
+
+bool check()
+{
+  bool pc = false;
+  if(P_score<=21 && P_score>D_score) 
+  {
+    pc = true;
+  }
+  return pc;
+}
+
+
+void restart()
+{
+  P_score = 0;
+  D_score = 0;
+  lcd.clear();
+  lcd.print("Restarting...");
+  delay(500);
+  loop();
+}
+
+void lose() 
+{
+  lcd.setRGB(255, 0, 0); 
+  lcd.clear();
+  lcd.print("YOU LOSE!"); 
+  delay(2000);
+  lcd.clear();
+  lcd.print("P_score      CPU");
+  lcd.setCursor(0, 1);
+  lcd.print(P_score);
+  lcd.print("  ");
+  lcd.print(D_score);
+   for(int c = 0; c <= 3; c++) 
+  {
+    tone(BUZZER_PIN, 880); 
+    delay(1000);             
+    noTone(BUZZER_PIN);     
+    delay(1000); 
+  }
+  delay(1000);
+  restart(); 
+
+void win() 
+{
+    lcd.setRGB(0, 255, 0); 
+  lcd.clear();
+  lcd.print("YOU WIN!");  
+  
+  int t = millis(); 
+  while(t < 300000) 
+  {
+    int n = millis();
+    if((n - t) > 5000)
+    {
+      break;
+    }
+    
+    digitalWrite(11, HIGH);
+    digitalWrite(10, LOW);
+    digitalWrite(9, LOW);
+    digitalWrite(8, LOW);
+
+    delay(200);   
+    digitalWrite(11, LOW);
+    digitalWrite(10, HIGH);
+    digitalWrite(9, LOW);
+    digitalWrite(8, LOW);
+
+    delay(200);  
+    digitalWrite(11, LOW);
+    digitalWrite(10, LOW);
+    digitalWrite(9, HIGH);
+    digitalWrite(8, LOW);
+
+    delay(200);  
+    digitalWrite(11, LOW);
+    digitalWrite(10, LOW);
+    digitalWrite(9, LOW);
+    digitalWrite(8, HIGH);
+
+    delay(200);  
+    digitalWrite(11, LOW);
+    digitalWrite(10, LOW);
+    digitalWrite(9, HIGH);
+    digitalWrite(8, LOW);
+
+    delay(200);  
+    digitalWrite(11, LOW);
+    digitalWrite(10, HIGH);
+    digitalWrite(9, LOW);
+    digitalWrite(8, LOW);
+
+    delay(200);  
+    digitalWrite(11, HIGH);
+    digitalWrite(10, LOW);
+    digitalWrite(9, LOW);
+    digitalWrite(8, LOW);
+
+    delay(200);  
+    digitalWrite(11, HIGH);
+    digitalWrite(10, LOW);
+    digitalWrite(9, LOW);
+    digitalWrite(8, LOW);
+
+  }
+  lcd.clear(); 
+  lcd.print("P_score  CPU"); 
+  lcd.setCursor(0, 1); 
+  lcd.print(P_score); 
+  lcd.print("   ");  
+  lcd.print(D_score); 
+   digitalWrite(10, LOW); 
+   delay(2000);
+   restart();  
+}
+
+void stand() 
+{
+  if(check()) 
+    {
+      win();
+    }
+  else 
+  {
+    lose();
+  }
+}
