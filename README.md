@@ -9,3 +9,5 @@ After that the program compares the results and give us output, which is "win" o
 In case of winning the screen goes green and there is a light sequence going forward. 
 In case of lose the screen goes green and the buzzer works. 
 After each game it restarts automatically and we can start the game again. 
+
+Important to mention: the display is not on tinkercad as it is not compatible with this website, but it works on the circuit
